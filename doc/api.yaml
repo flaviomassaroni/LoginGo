@@ -12,17 +12,24 @@ paths:
   /register:
     get:
       summary: Returns the HTML template to register
+      description: Serves the registration page as HTML
+      tags:
+        - Pages    
       responses:
         "200":
           description: The HTML registration page
           content:
             text/html:
               schema:
-                type: string
+                $ref: "#/components/schemas/User"
         "301":
+          description: Moved permanently
         "400":
+          description: Bad request
         "404":
+          description: Not found
         "503":
+          description: Service unavailable
 
     post:
       summary: Registers the user
@@ -32,20 +39,25 @@ paths:
           content:
             text/html:
               schema:
-                type: string
+                $ref: "#/components/schemas/User"
         "301":
         "400":
         "404":
         "503":
+
   /login:
     get:
       summary: Returns the HTML template to login
       responses:
         "200":
         "301":
+          description: Moved permanently
         "400":
+          description: Bad request
         "404":
+          description: Not found
         "503":
+          description: Service unavailable
 
     post:
       summary: Logs in the user
@@ -62,6 +74,29 @@ paths:
       responses:
         "200":
         "301":
+          description: Moved permanently
         "400":
+          description: Bad request
         "404":
+          description: Not found
         "503":
+          description: Service unavailable
+
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    
+    Error: 
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
