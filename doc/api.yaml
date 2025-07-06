@@ -1,0 +1,67 @@
+openapi: 3.0.4
+info:
+  title: LoginGO API
+  description: An API to organize a login template
+  version: 1.0.9
+
+
+servers:
+  - url: http://localhost:8080/
+
+paths:
+  /register:
+    get:
+      summary: Returns the HTML template to register
+      responses:
+        "200":
+          description: The HTML registration page
+          content:
+            text/html:
+              schema:
+                type: string
+        "301":
+        "400":
+        "404":
+        "503":
+
+    post:
+      summary: Registers the user
+      responses:
+        "200":
+          description: The HTML login page
+          content:
+            text/html:
+              schema:
+                type: string
+        "301":
+        "400":
+        "404":
+        "503":
+  /login:
+    get:
+      summary: Returns the HTML template to login
+      responses:
+        "200":
+        "301":
+        "400":
+        "404":
+        "503":
+
+    post:
+      summary: Logs in the user
+      responses:
+        "200":
+        "301":
+        "400":
+        "404":
+        "503":
+
+  /logout:
+    post:
+      summary: Logs out the user
+      responses:
+        "200":
+        "301":
+        "400":
+        "404":
+        "503":
