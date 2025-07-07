@@ -9,19 +9,46 @@ servers:
   - url: http://localhost:8080/
 
 paths:
-  /register:
+
+  /:
     get:
-      summary: Returns the HTML template to register
-      description: Serves the registration page as HTML
-      tags:
-        - Pages    
+      summary: Public landing page
+      description: Serves the main homepage for non-authenticated users
       responses:
         "200":
-          description: The HTML registration page
+          description: Public homepage
           content:
             text/html:
               schema:
-                $ref: "#/components/schemas/User"
+                type: string
+
+  /home:
+    get:
+      summary: Returns the home page for the logged-in user
+      description: Serves the home page after a successful login or registration
+      responses:
+        "200":
+          description: The HTML home page for the session
+          content:
+            text/html:
+              schema:
+                type: string
+        "401":
+          description: Unauthorized - user is not logged in
+        "503":
+          description: Service unavailable    
+
+  /register:
+    get:
+      summary: Returns the HTML template to register
+      description: Serves the registration page as HTML   
+      responses:
+        "200":
+          description: The HTML login page
+          content:
+            text/html:
+              schema:
+                type: string
         "301":
           description: Moved permanently
         "400":
@@ -33,23 +60,38 @@ paths:
 
     post:
       summary: Registers the user
+      description: Registers a new user and redirects to the home page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: Newly registered user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "302":
+          description: Redirect to the home page after successful login
+        "400":
+          description: Invalid credentials
+        "503":
+          description: Service unavailable
+
+  /login:
+    get:
+      summary: Returns the HTML login page
+      description: Serves the login page as HTML
       responses:
         "200":
           description: The HTML login page
           content:
             text/html:
               schema:
-                $ref: "#/components/schemas/User"
-        "301":
-        "400":
-        "404":
-        "503":
-
-  /login:
-    get:
-      summary: Returns the HTML template to login
-      responses:
-        "200":
+                type: string
         "301":
           description: Moved permanently
         "400":
@@ -61,18 +103,27 @@ paths:
 
     post:
       summary: Logs in the user
+      description: Authenticates the user and redirects to the home page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
       responses:
-        "200":
-        "301":
+        "302":
+          description: Redirect to the home page after successful login
         "400":
-        "404":
+          description: Invalid credentials
         "503":
+          description: Service unavailable
 
   /logout:
     post:
       summary: Logs out the user
       responses:
         "200":
+          description: Logout successful (redirect or page)
         "301":
           description: Moved permanently
         "400":
