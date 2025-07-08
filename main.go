@@ -14,6 +14,10 @@ type Login struct {
 
 func main() {
 
+	// Starting up PostgreSLQ DB
+	database.StartDB()
+
+	// Api Endpoints
 	http.HandleFunc("/", serveLoginPage)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/register", register)
@@ -22,7 +26,7 @@ func main() {
 }
 
 func serveLoginPage(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "template/home.html") // Assicurati che il file si chiami davvero così
+	http.ServeFile(w, r, "template/home.html")
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -46,13 +50,13 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.DB.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", username, string(hashedPassword))
-	if err != nil {
-		http.Error(w, "Registration Error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	//	_, err = database.DB.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", username, string(hashedPassword))
+	//	if err != nil {
+	//		http.Error(w, "Registration Error: "+err.Error(), http.StatusInternalServerError)
+	//		return
+	//	}
 
-	fmt.Fprintln(w, "User registered successfully!")
+	fmt.Fprintln(w, "User registered successfully!", username, hashedPassword)
 
 }
 
