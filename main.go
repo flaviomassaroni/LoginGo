@@ -51,6 +51,16 @@ func Register(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
+	if !CheckUsername(username) {
+		http.Error(w, "Invalid Username", http.StatusInternalServerError)
+		return
+	}
+
+	if !CheckPassword(password) {
+		http.Error(w, "Invalid Password", http.StatusInternalServerError)
+		return
+	}
+
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -63,7 +73,7 @@ func Register(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	fmt.Fprintln(w, "User registered successfully!", username, hashedPassword)
+	fmt.Fprintln(w, "User registered successfully!")
 
 }
 
