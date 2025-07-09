@@ -10,7 +10,9 @@ services:
     environment:
       POSTGRES_USER: logingo
       POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: yourdb
+      POSTGRES_DB: mydb
+    networks:
+      - backend
 
   app:
     build: .
@@ -20,7 +22,10 @@ services:
       - "8080:8080"
     environment:
       DB_URL: postgres://logingo:mypassword@db:5432/mydb?sslmode=disable
-
+    
+    networks:
+      - backend
+  
 volumes:
   pgdata:
 
