@@ -1,2 +1,2 @@
 # LoginGo
-An html login interface with API e GO backend management
+A dockerized interface to handle Logins by HTML page and PostgreSQL.
