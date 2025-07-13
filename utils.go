@@ -1,11 +1,12 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
 	"regexp"
 
-	"github.com/golang-jwt/jwt/v5"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -41,13 +42,12 @@ func CheckPassword(password string) bool {
 	return true
 }
 
-func UsernameExists(w http.ResponseWriter, username string, db *sqlx.DB) bool {
+func UsernameExists(username string, db *sqlx.DB) bool {
 
 	var exists bool
 	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE username=$1)", username)
 
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return false
 	}
 
@@ -55,13 +55,31 @@ func UsernameExists(w http.ResponseWriter, username string, db *sqlx.DB) bool {
 
 }
 
-func CreatingJWTToken(username string) (string, error) {
+func CreatingJWTToken(username string, secretKey []byte) (string, error) {
 
-	var (
-		key []byte
-		t   *jwt.Token
-		s   string
-	)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": username,
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
 
-	return token
+	return tokenString, nil
+}
+
+func VerifyToken(tokenString string, secretKey []byte) error {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !token.Valid {
+		return fmt.Errorf("invalid token")
+	}
+	return nil
 }

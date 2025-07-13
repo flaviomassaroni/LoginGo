@@ -22,20 +22,27 @@ func main() {
 	db := database.StartDB()
 	defer db.Close()
 
+	var secretKey []byte = []byte("secret")
+
 	// Api Endpoints
 	http.HandleFunc("/", ServeLoginPage)
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		Login(w, r, db)
+		Login(w, r, db, secretKey)
 	})
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
 		Register(w, r, db)
 	})
+	http.HandleFunc("/home", func(w http.ResponseWriter, r *http.Request) {
+		Home(w, r, secretKey)
+	})
+
 	http.HandleFunc("/logout", Logout)
 	http.ListenAndServe(":8080", nil)
+
 }
 
 func ServeLoginPage(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "template/home.html")
+	http.ServeFile(w, r, "template/temporary.html")
 }
 
 func Register(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
@@ -58,7 +65,7 @@ func Register(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	if UsernameExists(w, username, db) {
+	if UsernameExists(username, db) {
 		http.Error(w, "Username already exists", http.StatusInternalServerError)
 		return
 	}
@@ -84,7 +91,7 @@ func Register(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 }
 
-func Login(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Login(w http.ResponseWriter, r *http.Request, db *sqlx.DB, secretKey []byte) {
 
 	if r.Method == http.MethodGet {
 		http.ServeFile(w, r, "template/login.html")
@@ -100,26 +107,61 @@ func Login(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	if UsernameExists(w, username, db) {
-		toCheck := fmt.Sprintf("SELECT password FROM users WHERE username=($1)", username)
-		err := bcrypt.CompareHashAndPassword([]byte(toCheck), []byte(password))
-		if err != nil {
-			http.Error(w, "Invalid Password", http.StatusUnauthorized)
-			return
-		} else {
-			fmt.Fprintln(w, "Login Successful!")
-			// Set JWT token and redirect to home page
-
-			// Generate JWT token
-			token := CreatingJWTToken(username)
-
-			return
-		}
-
+	if !UsernameExists(username, db) {
+		http.Error(w, "Username does not exists!", http.StatusUnauthorized)
+		return
 	}
 
+	var toCheck string
+
+	err := db.Get(&toCheck, "SELECT password FROM users WHERE username=($1)", username)
+	if err != nil {
+		http.Error(w, "Invalid Password", http.StatusUnauthorized)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(toCheck), []byte(password))
+	if err != nil {
+		http.Error(w, "Invalid Password", http.StatusUnauthorized)
+		return
+	}
+	tokenString, err := CreatingJWTToken(username, secretKey)
+	if err != nil {
+		http.Error(w, "Could not create token", http.StatusInternalServerError)
+		return
+	}
+
+	//w.Header().Set("Content-Type", "application/json")
+	//w.WriteHeader(http.StatusOK)
+	//json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		HttpOnly: true,
+		Path:     "/",
+	})
+
+	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func Home(w http.ResponseWriter, r *http.Request, secretKey []byte) {
+
+	cookie, error := r.Cookie("token")
+	if error != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	err := VerifyToken(cookie.Value, secretKey)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	http.ServeFile(w, r, "template/home.html")
 }
