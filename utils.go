@@ -13,8 +13,8 @@ func hashPassword(password string) (string, error) {
 
 func CheckUsername(username string) bool {
 
-	re := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-	if len(username) < 3 || len(username) > 16 || re.MatchString(username) {
+	re := regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	if len(username) < 3 || len(username) > 16 || !re.MatchString(username) {
 		return false
 	}
 
@@ -30,5 +30,9 @@ func CheckPassword(password string) bool {
 	nums := regexp.MustCompile(`[0-9]`).MatchString(password)
 	special := regexp.MustCompile(`[!@#\$%\^&\*_\-+=\[\]{};':"\\|,.<>/?]`).MatchString(password)
 
-	return len && upper && lower && nums && special
+	if !len || !upper || !lower || !nums || !special {
+		return false
+	}
+
+	return true
 }
