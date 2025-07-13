@@ -133,6 +133,8 @@ paths:
         "503":
           description: Service unavailable
 
+security:
+  - bearerAuth: []
 
 components:
   schemas:
@@ -143,11 +145,17 @@ components:
           type: string
         password:
           type: string
-    
-    Error: 
+    error: 
       type: object
       properties:
         code:
           type: integer
         message:
           type: string
+  
+  securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+      

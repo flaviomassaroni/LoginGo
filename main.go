@@ -5,6 +5,8 @@ import (
 	"goLogin/database"
 	"net/http"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -56,6 +58,11 @@ func Register(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
+	if UsernameExists(w, username, db) {
+		http.Error(w, "Username already exists", http.StatusInternalServerError)
+		return
+	}
+
 	if !CheckPassword(password) {
 		http.Error(w, "Invalid Password", http.StatusInternalServerError)
 		return
@@ -93,7 +100,24 @@ func Login(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	fmt.Fprintln(w, "User logged successfully!", username, password)
+	if UsernameExists(w, username, db) {
+		toCheck := fmt.Sprintf("SELECT password FROM users WHERE username=($1)", username)
+		err := bcrypt.CompareHashAndPassword([]byte(toCheck), []byte(password))
+		if err != nil {
+			http.Error(w, "Invalid Password", http.StatusUnauthorized)
+			return
+		} else {
+			fmt.Fprintln(w, "Login Successful!")
+			// Set JWT token and redirect to home page
+
+			// Generate JWT token
+			token := CreatingJWTToken(username)
+
+			return
+		}
+
+	}
+
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
